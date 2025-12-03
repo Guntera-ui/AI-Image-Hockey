@@ -1,0 +1,6 @@
+/venv/
+/__pycache__/
+/assets/
+/media/
+/qr_codes/
+firebase-key.json

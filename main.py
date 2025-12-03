@@ -1,51 +1,72 @@
 # main.py
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from image_processing import fake_ai_image_process
+from config import BASE_DIR
+from hero_ai import generate_full_card_from_hero, generate_hero_from_photo
 from storage_client import upload_to_firebase
-from qr_codes import generate_qr_for_url
+
+# Reference Thunderstrike-style frame image (the one with
+# "PLAYER NAME PARTICIPATION TITLE" or similar placeholder text).
+# Put that file into assets/ and adjust the filename if needed.
+FRAME_STYLE_PATH = BASE_DIR / "assets" / "thunderstrike_reference.jpg"
 
 
 def process_local_image(input_image_path_str: str):
     """
-    Full pipeline:
-    - check image exists
-    - run fake AI processing
-    - upload processed image to Firebase Storage
-    - generate QR pointing to the HTTPS URL
-    - print where everything is saved
+    Full pipeline for the kiosk prototype:
+
+    1. Take the user input image from disk.
+    2. Use Gemini to generate a hockey hero image (player + arena).
+    3. Use Gemini again to create a full Thunderstrike-style card
+       using the hero image + a reference frame style.
+    4. Upload the final card to Firebase Storage and get a public URL.
+    5. Generate a QR code that points to that URL.
     """
     input_path = Path(input_image_path_str)
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input image not found: {input_path}")
 
+    if not FRAME_STYLE_PATH.exists():
+        raise FileNotFoundError(
+            f"Frame style image not found: {FRAME_STYLE_PATH}\n"
+            "Place your Thunderstrike reference card in assets/ and "
+            "update FRAME_STYLE_PATH if the filename is different."
+        )
+
     print(f"[1] Using input image: {input_path}")
 
-    # Step 1: process image with fake AI
-    processed_path = fake_ai_image_process(input_path)
-    print(f"[2] Processed image saved at: {processed_path}")
+    # TODO: later pull these from Firestore / UE5
+    user_name = "Nika Mzhavanadze"
+    power_label = "Power Shot"
 
-    # Step 2: upload to Firebase Storage, get public URL
-    public_url = upload_to_firebase(processed_path)
-    print(f"[3] Uploaded to Firebase Storage: {public_url}")
+    # Step 2: call Gemini to create the hero image from the user photo
+    hero_path = generate_hero_from_photo(input_path, user_name, power_label)
+    print(f"[2] Hero image from Gemini saved at: {hero_path}")
 
-    # Step 3: generate QR code for that public URL
-    qr_path = generate_qr_for_url(public_url)
-    print(f"[4] QR code saved at: {qr_path}")
+    # Step 3: call Gemini to create the full Thunderstrike-style card
+    card_path = generate_full_card_from_hero(
+        hero_image_path=hero_path,
+        frame_style_path=FRAME_STYLE_PATH,
+        user_name=user_name,
+        power_label=power_label,
+    )
+    print(f"[3] Final Thunderstrike card saved at: {card_path}")
+
+    # Step 4: upload card to Firebase Storage and get a public HTTPS URL
+    public_url = upload_to_firebase(card_path)
+    print("[4] Card uploaded to Firebase Storage.")
+    print(f"    Public URL: {public_url}")
 
     print("\nDone!")
-    print("→ Open the QR image and scan it with your phone.")
-    print("  It should open the HTTPS URL to the processed image.")
 
 
 if __name__ == "__main__":
-    # If user passes an argument, use that, otherwise default to test_input.jpg
+    # If an image path is passed as CLI arg, use it; otherwise default to test_input.jpg
     if len(sys.argv) > 1:
         image_path = sys.argv[1]
     else:
-        image_path = "test_input.PNG"  # fallback
+        image_path = "test3.jpg"  # fallback
 
     process_local_image(image_path)
-
