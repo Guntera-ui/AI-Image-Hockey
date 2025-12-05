@@ -72,7 +72,6 @@ def generate_hero_from_photo(
         ),
     )
 
-    # extract hero image
     image_bytes = None
     for part in response.candidates[0].content.parts:
         if getattr(part, "inline_data", None) is not None:
@@ -175,7 +174,6 @@ def generate_full_card_from_hero(
         ),
     )
 
-    # Extract the first image from the response
     image_bytes = None
     for part in response.candidates[0].content.parts:
         if getattr(part, "inline_data", None) is not None:
