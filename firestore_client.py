@@ -1,13 +1,11 @@
-# firestore_client.py
+from pathlib import Path
 from typing import Any, Dict
 
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-from config import SERVICE_ACCOUNT_PATH  # already exists in config.py  :contentReference[oaicite:3]{index=3}
+from config import SERVICE_ACCOUNT_PATH
 
-
-# Init Firestore once
 if not firebase_admin._apps:
     cred = credentials.Certificate(str(SERVICE_ACCOUNT_PATH))
     firebase_admin.initialize_app(cred)
@@ -44,5 +42,17 @@ def update_player_with_card(
             "heroURL": hero_url,
             "cardURL": card_url,
         },
-        merge=True,  # keep existing fields
+        merge=True,
     )
+
+
+def upload_video_to_firebase(video_path: Path) -> str:
+    """
+    Upload the generated video file to Firebase Storage.
+    Returns a public HTTPS URL.
+    """
+    blob_path = f"videos/{video_path.name}"
+    blob = bucket.blob(blob_path)
+    blob.upload_from_filename(str(video_path))
+    blob.make_public()
+    return blob.public_url
