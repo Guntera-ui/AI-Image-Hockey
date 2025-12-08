@@ -4,3 +4,5 @@
 /qr_codes/
 firebase-key.json
 /Legacy Code/
+/generated_videos/
+.env

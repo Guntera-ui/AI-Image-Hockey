@@ -1,15 +1,14 @@
 # player_pipeline.py
+from pathlib import Path
 from typing import TypedDict
 
-from hero_ai import generate_hero_from_photo, generate_full_card_from_hero
+from config import BASE_DIR
+from hero_ai import generate_full_card_from_hero, generate_hero_from_photo
 from storage_client import (
-    upload_to_firebase,
     download_blob_to_temp,
     download_url_to_temp,
+    upload_to_firebase,
 )
-from config import BASE_DIR
-
-from pathlib import Path
 
 FRAME_STYLE_PATH = BASE_DIR / "assets" / "thunderstrike_reference.jpg"
 DEFAULT_POWER_LABEL = "Power Shot"
@@ -38,11 +37,9 @@ def run_player_pipeline_from_storage_blob(
 ) -> PlayerRunResult:
     """
     Main AI pipeline, where the selfie already lives in Firebase Storage.
-
     Args:
         selfie_blob_path: e.g. 'selfies/xyz.jpg'
         first_name, last_name, gender: collected from the kiosk UI
-
     Returns:
         dict with hero/card local paths and Firebase public URLs.
     """
