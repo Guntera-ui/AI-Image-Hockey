@@ -1,5 +1,3 @@
-# storage_client.py
-
 from pathlib import Path
 
 import firebase_admin
@@ -9,7 +7,6 @@ from firebase_admin import storage as fb_storage
 
 from config import FIREBASE_STORAGE_BUCKET, MEDIA_DIR, SERVICE_ACCOUNT_PATH
 
-# Initialize Firebase Storage client
 if not firebase_admin._apps:
     cred = credentials.Certificate(str(SERVICE_ACCOUNT_PATH))
     firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})

@@ -30,7 +30,7 @@ def _build_email_html(
         <tr>
           <td>
             <div style="margin-top: 18px;">
-              <div style="font-weight: 600; margin-bottom: 6px;">🎥 Your Highlight Video</div>
+              <div style="font-weight: 600; margin-bottom: 6px;"> Your Highlight Video</div>
               <a href="{video_url}"
                  style="display:inline-block; padding:10px 16px; background:#6C5CE7; color:white;
                         border-radius:8px; text-decoration:none; font-weight:600;">
@@ -62,7 +62,7 @@ def _build_email_html(
               <tr>
                 <td align="center" style="padding-bottom:10px;">
                   <h1 style="margin:0; font-size:26px; color:#1B1B1B;">
-                    Your AI Hockey Hero is Ready! 🏒🔥
+                    Your AI Hockey Hero is Ready!
                   </h1>
                 </td>
               </tr>
@@ -79,7 +79,7 @@ def _build_email_html(
               <!-- Card section -->
               <tr>
                 <td>
-                  <div style="font-weight:600; margin-bottom:6px;">🃏 Your Hero Card</div>
+                  <div style="font-weight:600; margin-bottom:6px;"> Your Hero Card</div>
                   <a href="{card_url}"
                      style="display:inline-block; padding:10px 16px; background:#0984e3; color:white;
                             border-radius:8px; text-decoration:none; font-weight:600;">

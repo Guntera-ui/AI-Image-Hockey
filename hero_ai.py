@@ -39,29 +39,25 @@ def generate_hero_from_photo(
         mime_type=mime_type,
     )
 
-    prompt = (
-        "You are creating a vertical hockey action poster from a reference face.\n\n"
-        "Use the person or animal in the input photo as the character's face, but "
-        "turn them into a professional hockey player.\n\n"
-        "Composition and style requirements:\n"
-        "- Vertical 9:16 poster framing.\n"
-        "- Full body in a dynamic skating or shooting pose on the ice.\n"
-        "- Put the head and upper body in the upper half of the frame and keep "
-        "the skates comfortably above the very bottom edge so there is visual "
-        "space above and below the player for graphic overlays.\n"
-        "- Background: bright hockey arena with stadium lights and a blurred "
-        "crowd, similar to a professional NHL broadcast. Slight depth-of-field "
-        "blur in the background is good.\n"
-        "- Jersey: generic red and blue pro-style uniform with a simple, bold "
-        "fictional logo. Do NOT use any real team or brand logos or text.\n"
-        "- Lighting: vivid and dramatic, with strong highlights from the arena "
-        "lights, but keep the scene clean and readable.\n"
-        "- Keep the ice and player clearly visible. Do NOT add extra diagonal "
-        "paint strokes, graphic overlays, UI elements or spark trails across "
-        "the image. No text, no watermarks, no border, no logo in the corners.\n\n"
-        "Important: Only generate the photographic hockey scene (player + arena). "
-        "We will add all poster templates, logos, and typography later."
-    )
+    prompt = """Convert this selfie into a hyper-realistic, high-definition image of a professional ice hockey player wearing a professional uniform
+    (navy-base hockey jersey with sky-blue stripes,
+    subtle teal piping, minimal sand trim, bold neon-pink accents, and white numbers) in full motion skating
+    aggressively on a glossy, reflective ice rink during an
+    intense championship moment facing towards the camera pov.
+    There should be no branding or text on the player at all, no logo on the shoulders, no branding on the gloves, helmet, or stick.
+    The player is mid-stride, leaning forward with determination, knees bent, and both skates cutting sharply through the ice, sending small shards of ice flying.
+    He grips his hockey stick with both hands, ready to strike or pass the puck, which is visible near the blade.
+    The athlete wears a white and blue uniform with red accents — detailed fabric texture, subtle wear marks, mesh ventilation details, and realistic padding beneath the jersey.
+    Include visible branding details like stitched seams, laces, and small logos, all accurately rendered without distortion. His helmet has a clear visor reflecting the surrounding lights, and dynamic shadows fall naturally across his body and the rink.
+    Behind him, the arena lights explode into a vibrant, cinematic color palette — intense purple, magenta, electric blue, and crimson beams — creating a sense of high energy and depth. The light sources should produce volumetric light rays and subtle lens flares, illuminating the mist and ice particles in the air.
+    The background should fade into soft bokeh with crowd silhouettes and colored spotlights, maintaining focus on the player in the foreground.
+    The camera angle is dynamic, slightly low and tilted upward, emphasizing motion, power, and presence.
+    The player’s reflection and motion blur appear subtly on the ice surface, adding realism and movement.
+    The atmosphere is charged with energy and emotion — a mix of fog, glowing reflections, and high-contrast lighting that suggests this is the peak of a match.
+    Include fine details like skate scratches, glistening ice texture, and faint vapor breath escaping the player’s helmet to convey intensity and realism.
+    Render using ultra-photorealistic 8K resolution, physically based lighting, and dynamic depth of field (shallow focus on the player’s face and jersey details). The composition should resemble a cinematic sports photography shot captured on a 50mm lens, with a slightly desaturated background to make the foreground colors pop.
+    Keywords for realism & quality: hyper-realistic lighting, ultra-detailed textures, realistic materials, volumetric glow, fog diffusion, light scattering, motion streaks, energy beams, high-contrast color grading, HDR exposure, professional sports photography, crisp reflections, studio-grade lighting setup, photoreal rendering.
+    The size of the image should be 9x16"""
 
     response = client.models.generate_content(
         model=MODEL_ID,
@@ -152,16 +148,9 @@ def generate_full_card_from_hero(
       and follow the same curvature, spacing, and white typographic style as in IMAGE 2.
     • DO NOT add placeholder text or extra words.
 
-    JERSEY REQUIREMENTS:
-    • Keep the shape and folds of the jersey from IMAGE 1.
-    • Recolor it in the Thunderstrike / Jersey Mike’s palette (white/red/blue),
-      inspired by the reference card’s uniform style.
-    • Add a simple fictional crest or stylized circular logo similar in style to
-      the reference. DO NOT use real NHL logos.
-
     FINAL RESULT MUST:
     • Preserve the hero from IMAGE 1 (face, pose, arena).
-    • Apply Thunderstrike-style overlays, lighting, and layout from IMAGE 2.
+    • Apply Thunderstrike-style overlays and layout from IMAGE 2.
     • Produce a polished, high-quality hockey promo poster with a 9:16 aspect ratio.
     """
 

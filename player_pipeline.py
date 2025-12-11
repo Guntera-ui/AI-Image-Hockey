@@ -45,7 +45,6 @@ def run_player_pipeline_from_storage_blob(
     """
     _ensure_frame_exists()
 
-    # 1) Download selfie from Storage to a temp local file (backend only)
     selfie_path: Path = download_blob_to_temp(selfie_blob_path)
 
     return _run_player_pipeline_local(
@@ -94,14 +93,12 @@ def _run_player_pipeline_local(
     user_name = f"{first_name} {last_name}".strip()
     power_label = DEFAULT_POWER_LABEL
 
-    # Hero from selfie
     hero_path = generate_hero_from_photo(
         user_photo_path=selfie_path,
         user_name=user_name,
         power_label=power_label,
     )
 
-    # Card from hero + frame
     card_path = generate_full_card_from_hero(
         hero_image_path=hero_path,
         frame_style_path=FRAME_STYLE_PATH,
@@ -109,7 +106,6 @@ def _run_player_pipeline_local(
         power_label=power_label,
     )
 
-    # Upload both to Storage
     hero_url = upload_to_firebase(hero_path)
     card_url = upload_to_firebase(card_path)
 
