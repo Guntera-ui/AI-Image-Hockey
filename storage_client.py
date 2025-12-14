@@ -19,9 +19,18 @@ def upload_to_firebase(processed_path: Path) -> str:
     Upload a generated image file to Firebase Storage under /processed.
     Returns a public HTTPS URL.
     """
-    blob_path = f"processed/{processed_path.name}"
+    return upload_file_to_firebase(processed_path, prefix="processed")
+
+
+def upload_file_to_firebase(local_path: Path, prefix: str) -> str:
+    """
+    Generic uploader for any file.
+    Uploads to gs://<bucket>/<prefix>/<filename> and returns a public URL.
+    """
+    local_path = Path(local_path)
+    blob_path = f"{prefix}/{local_path.name}"
     blob = bucket.blob(blob_path)
-    blob.upload_from_filename(str(processed_path))
+    blob.upload_from_filename(str(local_path))
     blob.make_public()
     return blob.public_url
 
@@ -42,12 +51,8 @@ def download_blob_to_temp(blob_path: str) -> Path:
 
 def download_url_to_temp(public_url: str) -> Path:
     """
-    Download any public Firebase Storage URL (or any HTTPS URL)
-    into MEDIA_DIR and return the local Path.
-
-    Works with:
-    - https://firebasestorage.googleapis.com/...
-    - https://storage.googleapis.com/<bucket>/processed/...
+    Download any public HTTPS URL into MEDIA_DIR and return the local Path.
+    Works with Firebase Storage public URLs too.
     """
     response = requests.get(public_url)
     response.raise_for_status()
@@ -63,11 +68,15 @@ def download_url_to_temp(public_url: str) -> Path:
 
 def upload_video_to_firebase(video_path: Path) -> str:
     """
-    Upload a generated video file to Firebase Storage under /videos.
-    Returns a public HTTPS URL.
+    Upload a branded/final video under /videos.
     """
-    blob_path = f"videos/{video_path.name}"
-    blob = bucket.blob(blob_path)
-    blob.upload_from_filename(str(video_path))
-    blob.make_public()
-    return blob.public_url
+    return upload_file_to_firebase(Path(video_path), prefix="videos")
+
+
+def upload_raw_video_to_firebase(video_path: Path) -> str:
+    """
+    Upload the *raw* (pre-overlay) video under /videos_raw.
+    NOTE: In the updated listener, this is only used on failures (Option A).
+    """
+    return upload_file_to_firebase(Path(video_path), prefix="videos_raw")
+

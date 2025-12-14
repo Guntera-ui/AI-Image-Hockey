@@ -1,11 +1,30 @@
-from pathlib import Path
-from typing import Any, Dict
+"""
+firestore_client.py
+
+Lightweight Firestore helpers.
+This file MUST NOT:
+- run pipeline logic
+- upload to Storage
+- contain listeners
+
+It is only for:
+- reading player docs
+- updating fields safely
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
 
 import firebase_admin
 from firebase_admin import credentials, firestore
 
 from config import SERVICE_ACCOUNT_PATH
 
+
+# ----------------------------
+# Firebase init (singleton)
+# ----------------------------
 if not firebase_admin._apps:
     cred = credentials.Certificate(str(SERVICE_ACCOUNT_PATH))
     firebase_admin.initialize_app(cred)
@@ -13,46 +32,66 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 
-def get_player_data(email: str) -> Dict[str, Any]:
-    """
-    Load player doc from Firestore.
-    Collection name from your screenshot: 'players'
-    Document ID = email.
-    """
-    ref = db.collection("players").document(email)
-    doc = ref.get()
+# ----------------------------
+# Basic helpers
+# ----------------------------
 
-    if not doc.exists:
-        raise ValueError(f"Player document not found: {email}")
-
-    return doc.to_dict()
+def get_player_ref(player_id: str) -> firestore.DocumentReference:
+    """Return reference to players/{player_id}."""
+    return db.collection("players").document(player_id)
 
 
-def update_player_with_card(
-    email: str,
-    hero_url: str,
-    card_url: str,
-):
+def get_player_doc(player_id: str) -> Dict[str, Any]:
+    """Fetch players/{player_id} as a dict."""
+    ref = get_player_ref(player_id)
+    snap = ref.get()
+    if not snap.exists:
+        raise ValueError(f"Player document not found: {player_id}")
+    return snap.to_dict() or {}
+
+
+def update_player_fields(player_id: str, fields: Dict[str, Any]) -> None:
+    """Merge-update players/{player_id}."""
+    if not fields:
+        return
+    get_player_ref(player_id).set(fields, merge=True)
+
+
+def delete_player_fields(player_id: str, *field_names: str) -> None:
+    """Delete specific fields from players/{player_id}."""
+    if not field_names:
+        return
+    updates = {name: firestore.DELETE_FIELD for name in field_names}
+    get_player_ref(player_id).set(updates, merge=True)
+
+
+# ----------------------------
+# Convenience utilities
+# ----------------------------
+
+def find_player_by_email(email: str) -> Optional[str]:
     """
-    Write the final image URLs back to the same Firestore document.
+    Find a player document ID by email.
+    Returns doc ID or None.
     """
-    ref = db.collection("players").document(email)
-    ref.set(
-        {
-            "heroURL": hero_url,
-            "cardURL": card_url,
-        },
-        merge=True,
+    q = (
+        db.collection("players")
+        .where("email", "==", email)
+        .limit(1)
+        .stream()
     )
+    for snap in q:
+        return snap.id
+    return None
 
 
-def upload_video_to_firebase(video_path: Path) -> str:
+def mark_player_status(player_id: str, status: str, message: Optional[str] = None) -> None:
     """
-    Upload the generated video file to Firebase Storage.
-    Returns a public HTTPS URL.
+    Update status and optional human-readable statusMessage.
+    Useful for admin tools / CLI.
     """
-    blob_path = f"videos/{video_path.name}"
-    blob = bucket.blob(blob_path)
-    blob.upload_from_filename(str(video_path))
-    blob.make_public()
-    return blob.public_url
+    data = {"status": status}
+    if message:
+        data["statusMessage"] = message
+    update_player_fields(player_id, data)
+

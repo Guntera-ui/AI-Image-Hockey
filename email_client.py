@@ -13,95 +13,219 @@ from config import (
     EMAIL_USERNAME,
 )
 
+# ----------------------------
+# Brand styling (Jersey Mike's)
+# ----------------------------
+BRAND_RED = "#EE3227"   # Permanent Geranium Lake
+BRAND_BLUE = "#134A7C"  # Dark Cerulean
 
-def _build_email_html(
-    first_name: str,
-    card_url: str,
-    video_url: Optional[str],
-) -> str:
-    """
-    Build a nice HTML email body with buttons for card + optional video.
-    """
-    safe_name = first_name or "Player"
+BRAND_NAME = "Jersey Mike’s"
+LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/ai-image-app-e900c.firebasestorage.app/o/assets%2Fjersey_Mikes.jpg?alt=media&token=b6bb52c0-15fd-4f16-a65d-26c7a588d895"
+BRAND_WEBSITE = "https://www.jerseymikes.com/"
 
-    video_block = ""
+
+def _format_name(first_name: str) -> str:
+    name = (first_name or "").strip()
+    if not name:
+        return "Player"
+    return " ".join(w[:1].upper() + w[1:].lower() for w in name.split())
+
+
+def _brand_logo_tile(size_px: int = 54) -> str:
+    return f"""
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background:#ffffff; border-radius:16px; padding:6px; border:1px solid #e5e7eb;">
+          <img src="{LOGO_URL}" alt="{BRAND_NAME}" width="{size_px}" height="{size_px}"
+               style="display:block; border-radius:12px;" />
+        </td>
+      </tr>
+    </table>
+    """
+
+
+def _build_email_html(first_name: str, card_url: str, video_url: Optional[str]) -> str:
+    safe_name = _format_name(first_name)
+
+    # ---- stacked content card ----
+    video_section = ""
     if video_url:
-        video_block = f"""
+        video_section = f"""
+        <!-- Divider -->
         <tr>
-          <td>
-            <div style="margin-top: 18px;">
-              <div style="font-weight: 600; margin-bottom: 6px;"> Your Highlight Video</div>
-              <a href="{video_url}"
-                 style="display:inline-block; padding:10px 16px; background:#6C5CE7; color:white;
-                        border-radius:8px; text-decoration:none; font-weight:600;">
-                  Watch Video
-              </a>
-              <p style="font-size:13px; color:#777; margin-top:6px;">
-                On iPhone: open the link → tap and hold the video → “Save Video”.
-              </p>
+          <td style="padding:0 16px;">
+            <div style="height:1px; background:#e5e7eb;"></div>
+          </td>
+        </tr>
+
+        <!-- Video section -->
+        <tr>
+          <td style="padding:16px;">
+            <div style="height:4px; background:{BRAND_RED}; border-radius:999px;"></div>
+            <div style="height:12px;"></div>
+
+            <div style="font-size:14px; font-weight:900; color:{BRAND_BLUE}; margin-bottom:10px;">
+              Your Highlight Video
             </div>
+
+            <a href="{video_url}"
+               style="display:inline-block; padding:12px 16px; background:{BRAND_RED}; color:#ffffff;
+                      border-radius:12px; text-decoration:none; font-weight:900; font-size:14px;">
+              Watch Video
+            </a>
           </td>
         </tr>
         """
 
+    stacked_content_card = f"""
+    <!-- Stacked content card -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="border:1px solid #e5e7eb; border-radius:18px; background:#fbfbfd; overflow:hidden;">
+
+      <!-- Hero card section -->
+      <tr>
+        <td style="padding:16px;">
+          <div style="height:4px; background:{BRAND_BLUE}; border-radius:999px;"></div>
+          <div style="height:12px;"></div>
+
+          <div style="font-size:14px; font-weight:900; color:{BRAND_BLUE}; margin-bottom:10px;">
+            Your Hero Card
+          </div>
+
+          <a href="{card_url}"
+             style="display:inline-block; padding:12px 16px; background:{BRAND_BLUE}; color:#ffffff;
+                    border-radius:12px; text-decoration:none; font-weight:900; font-size:14px;">
+            View Card
+          </a>
+        </td>
+      </tr>
+
+      {video_section}
+
+    </table>
+    """
+
+    signature = f"""
+    <!-- Signature -->
+    <tr>
+      <td style="padding-top:26px;">
+        <div style="height:1px; background:#e5e7eb;"></div>
+
+        <div style="height:14px;"></div>
+
+        <div style="height:5px; background:{BRAND_BLUE}; border-radius:999px;"></div>
+        <div style="height:6px;"></div>
+        <div style="height:5px; background:{BRAND_RED}; border-radius:999px;"></div>
+
+        <div style="height:16px;"></div>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td valign="top" style="width:78px; padding-right:14px;">
+              {_brand_logo_tile(56)}
+            </td>
+
+            <td valign="top"
+                style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#111827;">
+
+              <div style="font-size:15px; font-weight:950; color:{BRAND_BLUE}; line-height:1.2;">
+                {BRAND_NAME}
+              </div>
+
+              <div style="font-size:12.5px; font-weight:800; color:#374151; margin-top:3px;">
+                Hockey Kiosk — Player Content Delivery
+              </div>
+
+              <div style="margin-top:10px; font-size:12.5px; color:#4b5563; line-height:1.55;">
+                Automated message from the Jersey Mike’s event experience.
+              </div>
+
+              <div style="margin-top:12px;">
+                <a href="{BRAND_WEBSITE}"
+                   style="display:inline-block; font-size:12px; font-weight:900; text-decoration:none;
+                          color:#ffffff; background:{BRAND_BLUE}; padding:10px 12px; border-radius:10px;">
+                  Visit Jersey Mike’s
+                </a>
+              </div>
+
+              <div style="margin-top:12px; font-size:11px; color:#9ca3af; line-height:1.45;">
+                If you didn’t request this email, you can safely ignore it.
+              </div>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    """
+
     html = f"""
     <html>
-    <body style="margin:0; padding:0; background:#f4f6fb;
+    <body style="margin:0; padding:0; background:#f3f4f6;
                  font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
-      <table width="100%" cellpadding="0" cellspacing="0"
-             style="background:#f4f6fb; padding:20px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
         <tr>
           <td align="center">
-            <table width="100%" cellpadding="0" cellspacing="0"
-                   style="max-width:600px; background:#ffffff;
-                          border-radius:14px; padding:30px;
-                          box-shadow:0 4px 12px rgba(0,0,0,0.08);">
 
-              <!-- Header -->
-              <tr>
-                <td align="center" style="padding-bottom:10px;">
-                  <h1 style="margin:0; font-size:26px; color:#1B1B1B;">
-                    Your AI Hockey Hero is Ready!
-                  </h1>
-                </td>
-              </tr>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="max-width:640px; background:#ffffff; border-radius:18px; overflow:hidden;
+                          box-shadow:0 10px 28px rgba(0,0,0,0.10);">
 
-              <!-- Greeting -->
-              <tr>
-                <td style="font-size:16px; color:#333; padding-bottom:18px;">
-                  Hi <strong>{safe_name}</strong>,<br>
-                  Thanks for visiting our hockey kiosk! Here’s your personalized hero card
-                  and highlight video.
-                </td>
-              </tr>
-
-              <!-- Card section -->
+              <!-- Top brand bars -->
               <tr>
                 <td>
-                  <div style="font-weight:600; margin-bottom:6px;"> Your Hero Card</div>
-                  <a href="{card_url}"
-                     style="display:inline-block; padding:10px 16px; background:#0984e3; color:white;
-                            border-radius:8px; text-decoration:none; font-weight:600;">
-                    View Card
-                  </a>
-                  <p style="font-size:13px; color:#777; margin-top:6px;">
-                    On iPhone: open the link → tap and hold the image → “Save to Photos”.
-                  </p>
+                  <div style="height:7px; background:{BRAND_BLUE};"></div>
+                  <div style="height:7px; background:{BRAND_RED};"></div>
                 </td>
               </tr>
 
-              {video_block}
-
-              <!-- Footer -->
               <tr>
-                <td style="padding-top:28px; font-size:13px; color:#999; text-align:center;">
-                  Powered by our AI Hockey Experience Engine.<br>
-                  If you didn’t request this, you can ignore this email.
+                <td style="padding:30px;">
+
+                  <!-- Header -->
+                  <table role="presentation" width="100%">
+                    <tr>
+                      <td>
+                        <div style="font-size:22px; font-weight:950; color:{BRAND_BLUE};">
+                          Your Hero is Ready
+                        </div>
+                        <div style="margin-top:6px; font-size:13px; color:#6b7280;">
+                          Download your personalized hero content below.
+                        </div>
+                      </td>
+                      <td align="right" style="width:86px;">
+                        {_brand_logo_tile(54)}
+                      </td>
+                    </tr>
+                  </table>
+
+                  <div style="height:18px;"></div>
+
+                  <!-- Greeting -->
+                  <div style="font-size:15px; color:#111827; line-height:1.6;">
+                    Hi <strong>{safe_name}</strong>,<br/>
+                    Thanks for visiting our hockey kiosk! Here’s your content:
+                  </div>
+
+                  <div style="height:18px;"></div>
+
+                  {stacked_content_card}
+
+                  <table role="presentation" width="100%">
+                    {signature}
+                  </table>
+
                 </td>
               </tr>
-
             </table>
+
+            <div style="height:14px;"></div>
+
+            <div style="max-width:640px; font-size:11px; color:#9ca3af; text-align:center;">
+              © {BRAND_NAME}. Automated message.
+            </div>
+
           </td>
         </tr>
       </table>
@@ -118,39 +242,29 @@ def send_player_result_email(
     card_url: str,
     video_url: Optional[str] = None,
 ) -> None:
-    """
-    Send an email with links to the player's hero card and optional video.
-
-    Raises an exception if credentials are missing or SMTP fails.
-    """
-
     if not (EMAIL_USERNAME and EMAIL_PASSWORD):
-        raise RuntimeError(
-            "Email credentials not configured (EMAIL_USERNAME / EMAIL_PASSWORD)"
-        )
+        raise RuntimeError("Email credentials not configured")
 
-    subject = "Your AI Hockey Hero is Ready!"
+    subject = "Your Jersey Mike’s Hero is Ready!"
+
+    safe_name = _format_name(first_name)
     plain_text = (
-        f"Hi {first_name or 'Player'},\n\n"
-        f"Your AI hockey hero is ready.\n\n"
+        f"Hi {safe_name},\n\n"
+        f"Your hero content is ready.\n\n"
         f"Hero card: {card_url}\n"
     )
     if video_url:
-        plain_text += f"Highlight video: {video_url}\n\n"
-    plain_text += (
-        "Open these links to view or download your content.\n\n"
-        "If you didn't request this email, you can ignore it.\n"
-    )
+        plain_text += f"Highlight video: {video_url}\n"
+    plain_text += "\nIf you didn’t request this email, you can ignore it.\n"
 
     msg = EmailMessage()
     msg["From"] = EMAIL_FROM
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.set_content(plain_text)
+
     msg.add_alternative(
-        _build_email_html(
-            first_name=first_name or "Player", card_url=card_url, video_url=video_url
-        ),
+        _build_email_html(first_name, card_url, video_url),
         subtype="html",
     )
 
@@ -161,3 +275,4 @@ def send_player_result_email(
         server.send_message(msg)
 
     print(f"[email_client] Sent result email to {to_email}")
+

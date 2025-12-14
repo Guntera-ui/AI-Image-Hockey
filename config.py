@@ -33,3 +33,42 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 EMAIL_BRAND_LOGO_URL = os.getenv("EMAIL_BRAND_LOGO_URL")
+
+
+# ----------------------------
+# Video overlay assets
+# ----------------------------
+# Place these files under ./assets/overlays/ to match defaults below.
+
+VIDEO_OVERLAY_FRAME_PATH = Path(
+    os.getenv(
+        "VIDEO_OVERLAY_FRAME_PATH",
+        str(BASE_DIR / "assets" / "overlays" / "frame_reference.png"),
+    )
+)
+
+VIDEO_OVERLAY_FONT_NAME_PATH = Path(
+    os.getenv(
+        "VIDEO_OVERLAY_FONT_NAME_PATH",
+        str(BASE_DIR / "assets" / "overlays" / "fonts" / "Montserrat-SemiBold.ttf"),
+    )
+)
+
+VIDEO_OVERLAY_FONT_SHOT_PATH = Path(
+    os.getenv(
+        "VIDEO_OVERLAY_FONT_SHOT_PATH",
+        str(BASE_DIR / "assets" / "overlays" / "fonts" / "Montserrat-Bold.ttf"),
+    )
+)
+
+# Your requirement: hole alpha must be <= 20 to be detected.
+VIDEO_OVERLAY_HOLE_ALPHA_MAX = int(os.getenv("VIDEO_OVERLAY_HOLE_ALPHA_MAX", "20"))
+
+
+# ----------------------------
+# Listener / pipeline safety
+# ----------------------------
+
+# How long before another worker can steal a stuck lock.
+LOCK_TTL_SECONDS = int(os.getenv("LOCK_TTL_SECONDS", "900"))  # 15 minutes
+
