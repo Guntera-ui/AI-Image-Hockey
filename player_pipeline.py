@@ -10,7 +10,7 @@ from storage_client import (
     upload_to_firebase,
 )
 
-FRAME_STYLE_PATH = BASE_DIR / "assets" / "thunderstrike_reference.jpg"
+FRAME_STYLE_PATH = BASE_DIR / "assets" / "thunderstrike_reference.png"
 DEFAULT_POWER_LABEL = "Power Shot"
 
 
@@ -84,8 +84,7 @@ def _run_player_pipeline_local(
     gender: str,
 ) -> PlayerRunResult:
     """
-    Internal helper that still uses the existing hero_ai functions which
-    expect a local file Path. This is where Gemini is actually called.
+    Internal helper that calls the hero + card generators on local files.
     """
     if not selfie_path.exists():
         raise FileNotFoundError(f"Selfie image not found: {selfie_path}")
@@ -93,10 +92,12 @@ def _run_player_pipeline_local(
     user_name = f"{first_name} {last_name}".strip()
     power_label = DEFAULT_POWER_LABEL
 
+    # ✅ PASS GENDER INTO HERO STEP (fixes female/male mismatch early)
     hero_path = generate_hero_from_photo(
         user_photo_path=selfie_path,
         user_name=user_name,
         power_label=power_label,
+        gender=gender,
     )
 
     card_path = generate_full_card_from_hero(
@@ -115,3 +116,4 @@ def _run_player_pipeline_local(
         "hero_path": str(hero_path),
         "card_path": str(card_path),
     }
+
