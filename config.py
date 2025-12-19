@@ -31,6 +31,9 @@ EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USERNAME or "no-reply@example.com")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+FAL_KEY = os.getenv("FAL_KEY")
+FAL_VIDEO_MODEL_ID = os.getenv("FAL_VIDEO_MODEL_ID")
+
 
 EMAIL_BRAND_LOGO_URL = os.getenv("EMAIL_BRAND_LOGO_URL")
 
@@ -72,3 +75,10 @@ VIDEO_OVERLAY_HOLE_ALPHA_MAX = int(os.getenv("VIDEO_OVERLAY_HOLE_ALPHA_MAX", "20
 # How long before another worker can steal a stuck lock.
 LOCK_TTL_SECONDS = int(os.getenv("LOCK_TTL_SECONDS", "900"))  # 15 minutes
 
+
+
+# Lazzy checker values
+#
+HERO_MAX_TRIES=4
+HERO_EARLY_ACCEPT=0.42
+HERO_MIN_SHARPNESS=60
