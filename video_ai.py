@@ -70,10 +70,9 @@ def generate_hockey_video_from_hero(
     else:
         gender_line = "The player is the same person as in the reference image."
 
-    # Integrated prompt (WAN 2.5 Fast style) + identity + 9:16 + 5 seconds
+    
     prompt = f"""
-VIDEO: (WAN 2.5 Fast) (Enhance ON)
-Generate a 5-second ultra-realistic, slow-motion cinematic video of a professional ice hockey player executing a powerful slap shot on an illuminated rink.
+Generate a 10-second ultra-realistic, slow-motion cinematic video of a professional ice hockey player executing a powerful slap shot on an illuminated rink.
 {gender_line}
 
 IDENTITY / CONSISTENCY (CRITICAL):
@@ -124,6 +123,8 @@ Aspect ratio: 9:16.
         {
             "prompt": prompt,
             "image_url": image_url,
+            "duration": 5,
+            "resolution": "720p",
         },
         with_logs=False,
     )
