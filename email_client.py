@@ -1,13 +1,11 @@
-# email_client.py
-
 from __future__ import annotations
 
 import smtplib
 import ssl
 from email.message import EmailMessage
+from email.mime.image import MIMEImage
 from pathlib import Path
 from typing import Optional
-from urllib.parse import quote
 
 from config import (
     EMAIL_FROM,
@@ -17,228 +15,236 @@ from config import (
     EMAIL_USERNAME,
 )
 
-# ----------------------------
-# Brand styling (Jersey Mike's)
-# ----------------------------
-BRAND_RED = "#EE3227"   # Permanent Geranium Lake
-BRAND_BLUE = "#134A7C"  # Dark Cerulean
-BRAND_NAME = "Jersey Mike’s"
+# -------------------------------------------------------------------
+# Embedded image CIDs
+# -------------------------------------------------------------------
+
+CID_TOP = "email_top"
+CID_BOTTOM = "email_bottom"
 
 DOWNLOAD_BASE = "https://jerseymikespowerplay.com/download"
+ORDER_NOW_URL = (
+    "https://www.jerseymikes.com/menu?"
+    "msclkid=7b30a333110c196efe95ca7f397ae0f5"
+    "&utm_source=bing&utm_medium=cpc"
+    "&utm_campaign=Search+-+Brand"
+    "&utm_term=jersey+mike%27s+menu"
+    "&utm_content=Menu"
+)
 
-# Inline (CID) logo config
-LOGO_CID = "jerseymikeslogo"
+# -------------------------------------------------------------------
+# Helpers
+# -------------------------------------------------------------------
 
-# Project-root-ish: email_client.py is typically in root; adjust if yours is in /src
-LOGO_LOCAL_PATH = Path(__file__).resolve().parent / "assets" / "overlays" / "jersey_logo.png"
-
-
-def _format_name(first_name: str) -> str:
-    """Formats the name to Title Case or returns 'Player' if empty."""
-    name = (first_name or "").strip()
-    if not name:
-        return "Player"
-    # Title-case each word
-    return " ".join([w[:1].upper() + w[1:].lower() for w in name.split()])
-
-
-def _download_link_for_email(user_email: str) -> str:
-    """
-    Builds: https://jerseymikespowerplay.com/download/<encoded-email>
-    URL-encodes the email so special characters don't break the path.
-    """
-    return f"{DOWNLOAD_BASE}/{quote((user_email or '').strip(), safe='')}"
+def _format_name(first_name: Optional[str]) -> str:
+    return first_name.strip() if first_name else "there"
 
 
-def _build_email_html(
-    first_name: str,
-    user_email: str,
-) -> str:
-    """Generates the HTML body of the email with brand styling."""
-    safe_name = _format_name(first_name)
-    download_url = _download_link_for_email(user_email)
+def _download_link_for_run(unique_id: str) -> str:
+    return f"{DOWNLOAD_BASE}/{unique_id}"
 
-    # CID embedded logo in a white tile to avoid “transparent edges” looking bad
-    logo_tile = f"""
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="background:#ffffff; border-radius:16px; padding:6px; border:1px solid #e5e7eb;">
-          <img src="cid:{LOGO_CID}" alt="{BRAND_NAME}" width="54" height="54"
-               style="display:block; border-radius:12px;" />
-        </td>
-      </tr>
-    </table>
-    """
 
-    html = f"""
-    <html>
-    <body style="margin:0; padding:0; background:#f3f4f6;
-                 font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+# -------------------------------------------------------------------
+# HTML builder
+# -------------------------------------------------------------------
 
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6; padding:24px 0;">
-        <tr>
-          <td align="center">
+def _build_email_html(first_name: str, unique_id: str) -> str:
+    name = _format_name(first_name)
+    download_url = _download_link_for_run(unique_id)
 
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                   style="max-width:640px; background:#ffffff; border-radius:18px; overflow:hidden;
-                          box-shadow:0 10px 28px rgba(0,0,0,0.10);">
+    return f"""\
+<!DOCTYPE html>
+<html>
+<body style="margin:0; padding:0; background:#ffffff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+<tr>
+<td align="center">
 
-              <tr>
-                <td style="padding:0;">
-                  <div style="height:7px; background:{BRAND_BLUE};"></div>
-                  <div style="height:7px; background:{BRAND_RED};"></div>
-                </td>
-              </tr>
+<table width="600" cellpadding="0" cellspacing="0"
+       style="background:#ffffff; margin:0; padding:0;">
 
-              <tr>
-                <td style="padding:30px 30px 26px 30px;">
+<!-- TOP IMAGE -->
+<tr>
+<td style="padding:0; line-height:0; font-size:0;">
+<img src="cid:{CID_TOP}" width="600"
+     style="display:block; border:0; outline:none;" />
+</td>
+</tr>
 
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td valign="middle">
-                        <div style="font-size:22px; font-weight:950; color:{BRAND_BLUE}; line-height:1.15;">
-                          Your Hero is Ready
-                        </div>
-                        <div style="margin-top:6px; font-size:13px; color:#6b7280; line-height:1.45;">
-                          Open your download page to view and save your results.
-                        </div>
-                      </td>
-                      <td valign="middle" align="right" style="width:86px;">
-                        {logo_tile}
-                      </td>
-                    </tr>
-                  </table>
+<!-- HEADLINE (RESTORED) -->
+<tr>
+<td align="center" style="
+  padding:18px 28px 6px 28px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:26px;
+  line-height:32px;
+  font-weight:900;
+  color:#134A7C;">
+Your Jersey Mike’s Power Play Video Is Ready!
+</td>
+</tr>
 
-                  <div style="height:18px;"></div>
+<!-- BODY TEXT -->
+<tr>
+<td style="
+  padding:16px 28px 16px 28px;
+  font-family:Arial, Helvetica, sans-serif;
+  color:#134A7C;
+  font-size:18px;
+  line-height:26px;
+  font-weight:600;">
+<strong>Hi {name},</strong><br><br>
+Thanks for joining the Jersey Mike’s Power Play hockey experience!
+Your custom photo and AI video are ready — watch yourself in full ice hockey
+gear taking the perfect shot on goal.
+</td>
+</tr>
 
-                  <div style="font-size:15px; color:#111827; line-height:1.6;">
-                    Hi <strong>{safe_name}</strong>,<br/>
-                    Thanks for visiting our hockey kiosk! Your content is ready.
-                  </div>
+<!-- DOWNLOAD LINK -->
+<tr>
+<td style="
+  padding:0 28px 18px 28px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:18px;
+  font-weight:700;">
+<a href="{download_url}"
+   style="color:#134A7C; text-decoration:underline;">
+Download Your Video
+</a>
+</td>
+</tr>
 
-                  <div style="height:16px;"></div>
-                  <div style="padding:16px; border:1px solid #e5e7eb; border-radius:16px; background:#fbfbfd;">
-                    <div style="height:4px; background:{BRAND_BLUE}; border-radius:999px;"></div>
-                    <div style="height:12px;"></div>
+<!-- SHARE TEXT -->
+<tr>
+<td style="
+  padding:0 28px 24px 28px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:18px;
+  line-height:26px;
+  color:#134A7C;
+  font-weight:600;">
+Think you nailed it? Share your epic shot with friends and show off your
+inner hockey star!
+</td>
+</tr>
 
-                    <div style="font-size:14px; font-weight:900; color:{BRAND_BLUE}; margin-bottom:10px;">
-                      Download Your Results
-                    </div>
+<!-- SIGNATURE -->
+<tr>
+<td style="
+  padding:0 28px 14px 28px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:18px;
+  font-weight:600;
+  color:#134A7C;">
+Cheers,<br>
+Jersey Mike’s
+</td>
+</tr>
 
-                    <a href="{download_url}"
-                       style="display:inline-block; padding:14px 18px; background:{BRAND_BLUE}; color:#ffffff;
-                              border-radius:12px; text-decoration:none; font-weight:900; font-size:14px;">
-                      Open Download Page
-                    </a>
+<!-- ORDER NOW BUTTON -->
+<tr>
+<td align="center" style="padding:10px 0 30px 0;">
+  <table cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td style="
+        background:#134A7C;
+        border-radius:18px;
+        padding:4px;">
+        <a href="{ORDER_NOW_URL}"
+           style="
+             display:block;
+             background:#134A7C;
+             border:2px solid #ffffff;
+             border-radius:14px;
+             padding:12px 34px;
+             font-family:Arial, Helvetica, sans-serif;
+             font-size:16px;
+             font-weight:900;
+             letter-spacing:2px;
+             color:#ffffff;
+             text-decoration:none;
+             text-align:center;">
+          ORDER&nbsp;NOW
+        </a>
+      </td>
+    </tr>
+  </table>
+</td>
+</tr>
 
-                    <div style="margin-top:12px; font-size:12px; color:#6b7280; line-height:1.45;">
-                      If the page doesn’t open, copy and paste this link into your browser:
-                      <span style="word-break:break-all; color:#111827;">{download_url}</span>
-                    </div>
-                  </div>
+<!-- BOTTOM IMAGE -->
+<tr>
+<td style="padding:0; line-height:0; font-size:0;">
+<img src="cid:{CID_BOTTOM}" width="600"
+     style="display:block; border:0; outline:none;" />
+</td>
+</tr>
 
-                  <div style="height:24px;"></div>
-                  <div style="height:1px; background:#e5e7eb;"></div>
+</table>
 
-                  <div style="height:14px;"></div>
-                  <div style="height:5px; background:{BRAND_BLUE}; border-radius:999px;"></div>
-                  <div style="height:6px;"></div>
-                  <div style="height:5px; background:{BRAND_RED}; border-radius:999px;"></div>
-                  <div style="height:16px;"></div>
+</td>
+</tr>
+</table>
+</body>
+</html>
+"""
 
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                    <tr>
-                      <td valign="top" style="width:78px; padding-right:14px;">
-                        {logo_tile}
-                      </td>
-                      <td valign="top" style="color:#111827;">
-                        <div style="font-size:15px; font-weight:950; color:{BRAND_BLUE}; line-height:1.2;">
-                          {BRAND_NAME}
-                        </div>
-                        <div style="font-size:12.5px; font-weight:800; color:#374151; margin-top:3px;">
-                          Hockey Kiosk — Player Content Delivery
-                        </div>
-                        <div style="margin-top:10px; font-size:12.5px; color:#4b5563; line-height:1.55;">
-                          Automated message from the Jersey Mike’s event experience.
-                        </div>
-                        <div style="margin-top:12px; font-size:11px; color:#9ca3af; line-height:1.45;">
-                          If you didn’t request this email, you can safely ignore it.
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
 
-                </td>
-              </tr>
-            </table>
-
-            <div style="height:14px;"></div>
-
-            <div style="max-width:640px; padding:0 10px; font-size:11px; color:#9ca3af; line-height:1.4; text-align:center;">
-              © {BRAND_NAME}. Automated message.
-            </div>
-
-          </td>
-        </tr>
-      </table>
-
-    </body>
-    </html>
-    """
-    return html
-
+# -------------------------------------------------------------------
+# Send function
+# -------------------------------------------------------------------
 
 def send_player_result_email(
+    *,
     to_email: str,
-    first_name: str,
-    card_url: str = "",      # kept for compatibility with existing calls
-    video_url: Optional[str] = None,  # kept for compatibility
+    run_id: str,
+    first_name: Optional[str] = "",
+    total_score: Optional[int] = None,  # intentionally ignored
 ) -> None:
-    """
-    Sends a single-button email to the user's download page.
-    """
+
     if not (EMAIL_USERNAME and EMAIL_PASSWORD):
-        raise RuntimeError("Email credentials not configured (EMAIL_USERNAME / EMAIL_PASSWORD)")
-
-    safe_name = _format_name(first_name)
-    download_url = _download_link_for_email(to_email)
-
-    subject = "Your Jersey Mike’s Hero is Ready!"
-
-    plain_text = (
-        f"Hi {safe_name},\n\n"
-        f"Your Jersey Mike’s hero content is ready.\n"
-        f"Open your download page:\n{download_url}\n\n"
-        "If you didn’t request this email, you can ignore it.\n"
-    )
+        raise RuntimeError("Email credentials not configured")
 
     msg = EmailMessage()
     msg["From"] = EMAIL_FROM
     msg["To"] = to_email
-    msg["Subject"] = subject
-    
-    # 1. Set the initial text content
-    msg.set_content(plain_text)
+    msg["Subject"] = "Your Jersey Mike’s Power Play Video Is Ready!"
 
-    # 2. Add HTML as an alternative.
-    # This modifies msg and returns None.
+    text_fallback = f"""Hi {first_name or "there"},
+
+Your Jersey Mike’s Power Play video is ready!
+
+Download your video:
+{_download_link_for_run(run_id)}
+
+Order now:
+{ORDER_NOW_URL}
+
+Cheers,
+Jersey Mike’s
+"""
+
+    msg.set_content(text_fallback)
     msg.add_alternative(
-        _build_email_html(first_name=first_name, user_email=to_email),
+        _build_email_html(first_name or "", run_id),
         subtype="html",
     )
 
-    # 3. Retrieve the HTML part from the message payload to add related items.
-    # The payload is now [PlainTextPart, HTMLPart].
     html_part = msg.get_payload()[1]
 
-    # 4. Attach inline logo (CID) using the correct PNG subtype.
-    logo_bytes = LOGO_LOCAL_PATH.read_bytes()
-    html_part.add_related(
-        logo_bytes,
-        maintype="image",
-        subtype="png",  # Updated from jpeg to match .png extension
-        cid=f"<{LOGO_CID}>",
-    )
+    for cid, path in (
+        (CID_TOP, "assets/overlays/email_top.png"),
+        (CID_BOTTOM, "assets/overlays/email_bottom.png"),
+    ):
+        with open(path, "rb") as f:
+            img = MIMEImage(f.read())
+            img.add_header("Content-ID", f"<{cid}>")
+            img.add_header(
+                "Content-Disposition",
+                "inline",
+                filename=Path(path).name,
+            )
+            html_part.add_related(img)
 
     context = ssl.create_default_context()
     with smtplib.SMTP(EMAIL_SMTP_HOST, EMAIL_SMTP_PORT) as server:
@@ -246,4 +252,5 @@ def send_player_result_email(
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
         server.send_message(msg)
 
-    print(f"[email_client] Sent result email to {to_email}")
+    print(f"[email_client] Sent result email to {to_email} (uniqueId={run_id})")
+

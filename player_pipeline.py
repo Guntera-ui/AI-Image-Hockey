@@ -1,17 +1,17 @@
 # player_pipeline.py
+
 from pathlib import Path
 from typing import TypedDict
 
 from config import BASE_DIR
-from hero_ai import generate_full_card_from_hero, generate_hero_from_photo
+from hero_ai import generate_hero_from_photo
+from hero_card_overlay import generate_card_with_frame
+from overlay_frames import pick_frame_for_score
 from storage_client import (
     download_blob_to_temp,
     download_url_to_temp,
     upload_to_firebase,
 )
-
-FRAME_STYLE_PATH = BASE_DIR / "assets" / "thunderstrike_reference.png"
-DEFAULT_POWER_LABEL = "Power Shot"
 
 
 class PlayerRunResult(TypedDict):
@@ -21,90 +21,42 @@ class PlayerRunResult(TypedDict):
     card_path: str
 
 
-def _ensure_frame_exists() -> None:
-    if not FRAME_STYLE_PATH.exists():
-        raise FileNotFoundError(
-            f"Frame style image not found: {FRAME_STYLE_PATH}. "
-            "Place your Thunderstrike reference card in assets/."
-        )
+def run_player_pipeline_from_storage_url(
+    selfie_url: str,
+    gender: str,
+    total_score: int,
+) -> PlayerRunResult:
+    selfie_path: Path = download_url_to_temp(selfie_url)
+    return _run_pipeline_local(selfie_path, gender, total_score)
 
 
 def run_player_pipeline_from_storage_blob(
     selfie_blob_path: str,
-    first_name: str,
-    last_name: str,
     gender: str,
+    total_score: int,
 ) -> PlayerRunResult:
-    """
-    Main AI pipeline, where the selfie already lives in Firebase Storage.
-    Args:
-        selfie_blob_path: e.g. 'selfies/xyz.jpg'
-        first_name, last_name, gender: collected from the kiosk UI
-    Returns:
-        dict with hero/card local paths and Firebase public URLs.
-    """
-    _ensure_frame_exists()
-
     selfie_path: Path = download_blob_to_temp(selfie_blob_path)
-
-    return _run_player_pipeline_local(
-        selfie_path=selfie_path,
-        first_name=first_name,
-        last_name=last_name,
-        gender=gender,
-    )
+    return _run_pipeline_local(selfie_path, gender, total_score)
 
 
-def run_player_pipeline_from_storage_url(
-    selfie_url: str,
-    first_name: str,
-    last_name: str,
-    gender: str,
-) -> PlayerRunResult:
-    """
-    Same as above, but starting from a Firebase public download URL
-    (like the 'selfieURL' field you're showing in Firestore).
-    """
-    _ensure_frame_exists()
-
-    selfie_path: Path = download_url_to_temp(selfie_url)
-
-    return _run_player_pipeline_local(
-        selfie_path=selfie_path,
-        first_name=first_name,
-        last_name=last_name,
-        gender=gender,
-    )
-
-
-def _run_player_pipeline_local(
+def _run_pipeline_local(
     selfie_path: Path,
-    first_name: str,
-    last_name: str,
     gender: str,
+    total_score: int,
 ) -> PlayerRunResult:
-    """
-    Internal helper that calls the hero + card generators on local files.
-    """
-    if not selfie_path.exists():
-        raise FileNotFoundError(f"Selfie image not found: {selfie_path}")
 
-    user_name = f"{first_name} {last_name}".strip()
-    power_label = DEFAULT_POWER_LABEL
-
-    # ✅ PASS GENDER INTO HERO STEP (fixes female/male mismatch early)
     hero_path = generate_hero_from_photo(
         user_photo_path=selfie_path,
-        user_name=user_name,
-        power_label=power_label,
+        user_name="",        # unused now
+        power_label="",      # unused now
         gender=gender,
     )
 
-    card_path = generate_full_card_from_hero(
+    frame_path = pick_frame_for_score(total_score)
+
+    card_path = generate_card_with_frame(
         hero_image_path=hero_path,
-        frame_style_path=FRAME_STYLE_PATH,
-        user_name=user_name,
-        power_label=power_label,
+        frame_path=frame_path,
     )
 
     hero_url = upload_to_firebase(hero_path)

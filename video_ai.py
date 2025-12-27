@@ -78,7 +78,7 @@ Generate a 10-second ultra-realistic, slow-motion cinematic video of a professio
 IDENTITY / CONSISTENCY (CRITICAL):
 - The player must be the SAME PERSON as in the reference image.
 - Preserve the same uniform colors, same lighting direction, and same realistic texture and equipment details.
-
+- DO NOT DISTORT FACE DURING movement
 ACTION:
 Begin with the player gliding forward, knees bent, eyes locked on the puck.
 As the motion progresses, the player winds up the stick, flexing it naturally under pressure, then strikes the puck with full force.

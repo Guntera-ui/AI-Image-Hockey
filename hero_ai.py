@@ -184,7 +184,7 @@ IDENTITY LOCK (HIGHEST PRIORITY):
 - Do NOT change gender, age, or ethnicity.
 - Face must remain SHARP and clearly visible:
   no motion blur on face, no heavy visor glare, no shadow covering the face.
-
+- DO NOT REMOVE HOCKEY STICK PLAYER NEEDS IT
 TASK:
 Convert the selfie into a hyper-realistic image of {player_desc}
 skating toward the camera on a glossy ice rink.
