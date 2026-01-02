@@ -1,17 +1,3 @@
-"""
-firestore_client.py
-
-Lightweight Firestore helpers.
-This file MUST NOT:
-- run pipeline logic
-- upload to Storage
-- contain listeners
-
-It is only for:
-- reading player docs
-- updating fields safely
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, Optional

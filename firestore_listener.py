@@ -181,7 +181,7 @@ class PlayerState:
     card_url: Optional[str]
     video_url: Optional[str]
 
-    unique_id: Optional[str]            # 🔥 ADDED
+    unique_id: Optional[str]            
 
     status: Optional[str]
     email_sent: bool
@@ -205,7 +205,7 @@ def _read_state(data: Dict[str, Any]) -> PlayerState:
         card_url=data.get("cardURL"),
         video_url=data.get("videoURL"),
 
-        unique_id=data.get("uniqueId"),   # 🔥 ADDED
+        unique_id=data.get("uniqueId"),
 
         status=data.get("status"),
         email_sent=bool(data.get("emailSent", False)),
@@ -214,7 +214,7 @@ def _read_state(data: Dict[str, Any]) -> PlayerState:
 
 
 # ============================================================
-# FRAME LOCKING HELPERS (UNCHANGED)
+# FRAME LOCKING HELPERS
 # ============================================================
 
 def _choose_and_lock_frame(ref, score: int) -> Tuple[str, str]:
@@ -235,7 +235,7 @@ def _frame_from_id(frame_id: str) -> str:
 
 
 # ============================================================
-# PHASE 1: HERO + RAW VIDEO (UNCHANGED)
+# PHASE 1: HERO + RAW VIDEO
 # ============================================================
 
 def _phase_hero(ref, state: PlayerState):
@@ -280,7 +280,7 @@ def _phase_hero(ref, state: PlayerState):
 
 
 # ============================================================
-# PHASE 2: OVERLAY (UNCHANGED)
+# PHASE 2: OVERLAY
 # ============================================================
 
 def _phase_overlay(ref, state: PlayerState):
@@ -341,7 +341,7 @@ def _phase_overlay(ref, state: PlayerState):
 
 
 # ============================================================
-# PHASE 3: EMAIL (ONLY REAL CHANGE)
+# PHASE 3: EMAIL
 # ============================================================
 
 def _phase_email(ref, state: PlayerState):
@@ -360,7 +360,7 @@ def _phase_email(ref, state: PlayerState):
             to_email=state.email,
             first_name=state.first_name,
             total_score=state.total_score,
-            run_id=state.unique_id,     # 🔥 uniqueId used
+            run_id=state.unique_id, 
         )
         ref.set(
             {

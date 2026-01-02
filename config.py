@@ -64,7 +64,7 @@ VIDEO_OVERLAY_FONT_SHOT_PATH = Path(
     )
 )
 
-# Your requirement: hole alpha must be <= 20 to be detected.
+#hole alpha must be <= 20 to be detected.
 VIDEO_OVERLAY_HOLE_ALPHA_MAX = int(os.getenv("VIDEO_OVERLAY_HOLE_ALPHA_MAX", "20"))
 
 

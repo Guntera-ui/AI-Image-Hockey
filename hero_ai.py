@@ -23,9 +23,9 @@ _face_app = None
 # Config helpers (config.py OR env)
 # ----------------------------
 def _cfg(name: str, default):
-    # Prefer config.py variables if you added them there
+    # Prefer config.py variables if added them there
     try:
-        import config  # type: ignore
+        import config  #
         if hasattr(config, name):
             return getattr(config, name)
     except Exception:
@@ -227,9 +227,6 @@ def _facefix_hero_image_bytes(
     hero_candidate_bytes: bytes,
     gender: Optional[str],
 ) -> bytes:
-    """
-    Keep everything from hero candidate the SAME, only fix the face identity using selfie reference.
-    """
     selfie_part = types.Part.from_bytes(
         data=selfie_path.read_bytes(),
         mime_type=_guess_mime_type(selfie_path),
@@ -272,7 +269,7 @@ IMAGE 2: selfie (identity reference)
 
 
 # ----------------------------
-# Public API (pipeline expects these)
+# Public API
 # ----------------------------
 def generate_hero_from_photo(
     user_photo_path: Path,
