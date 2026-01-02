@@ -214,8 +214,22 @@ CAMERA:
             image_config=types.ImageConfig(aspect_ratio="9:16"),
         ),
     )
+    
+    # --- BEGIN DEFENSIVE GUARD ---
+    if not response.candidates:
+        raise RuntimeError("Gemini returned no candidates")
 
-    for p in response.candidates[0].content.parts:
+    candidate = response.candidates[0]
+
+    if not candidate.content or not candidate.content.parts:
+        raise RuntimeError(
+            "Gemini returned empty content parts "
+            f"(finish_reason={getattr(candidate, 'finish_reason', None)})"
+        )
+    # --- END DEFENSIVE GUARD ---
+
+
+    for p in candidate.content.parts:
         if getattr(p, "inline_data", None):
             return p.inline_data.data
 
@@ -260,8 +274,21 @@ IMAGE 2: selfie (identity reference)
             image_config=types.ImageConfig(aspect_ratio="9:16"),
         ),
     )
+    # --- BEGIN DEFENSIVE GUARD ---
+    if not response.candidates:
+        raise RuntimeError("Gemini returned no candidates (facefix)")
 
-    for p in response.candidates[0].content.parts:
+    candidate = response.candidates[0]
+
+    if not candidate.content or not candidate.content.parts:
+        raise RuntimeError(
+            "Gemini returned empty content parts (facefix) "
+            f"(finish_reason={getattr(candidate, 'finish_reason', None)})"
+        )
+    # --- END DEFENSIVE GUARD ---
+
+
+    for p in candidate.content.parts:
         if getattr(p, "inline_data", None):
             return p.inline_data.data
 
@@ -451,8 +478,21 @@ OUTPUT:
             image_config=types.ImageConfig(aspect_ratio="9:16"),
         ),
     )
+    # --- BEGIN DEFENSIVE GUARD ---
+    if not response.candidates:
+        raise RuntimeError("Gemini returned no candidates (card)")
 
-    for p in response.candidates[0].content.parts:
+    candidate = response.candidates[0]
+
+    if not candidate.content or not candidate.content.parts:
+        raise RuntimeError(
+            "Gemini returned empty content parts (card) "
+            f"(finish_reason={getattr(candidate, 'finish_reason', None)})"
+        )
+    # --- END DEFENSIVE GUARD ---
+
+
+    for p in candidate.content.parts:
         if getattr(p, "inline_data", None):
             card = Image.open(BytesIO(p.inline_data.data)).convert("RGBA")
             out = MEDIA_DIR / f"card_{uuid.uuid4().hex}.png"
