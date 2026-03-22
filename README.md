@@ -1,4 +1,4 @@
-# AI Hockey Player Pipeline (Jersey Mike’s Power Play)
+# AI Hockey Player Pipeline
 
 This project is an end-to-end AI pipeline that transforms a user’s selfie into a personalized hockey player experience. It generates a hero portrait, a hockey card, a branded video, and delivers the result via email. The system is built for real-world deployment using Firebase and AI model providers.
 
