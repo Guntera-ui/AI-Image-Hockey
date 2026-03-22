@@ -1,43 +1,40 @@
-# AI Hockey Player Pipeline
+# AI Sports Media Generation Pipeline
 
-This project is an end-to-end AI pipeline that transforms a user’s selfie into a personalized hockey player experience. It generates a hero portrait, a hockey card, a branded video, and delivers the result via email. The system is built for real-world deployment using Firebase and AI model providers.
+This project is an end-to-end backend system that transforms a user’s photo into a complete sports-themed media experience. It generates a stylized portrait, a trading card, and a branded video, then delivers the result via a unique download link.
 
----
-
-## Features
-
-* Automated image and video generation pipeline
-* AI-generated hero portraits and hockey cards
-* AI-generated branded videos
-* Firebase Firestore and Storage integration
-* Email delivery system (SendGrid)
-* Fault-tolerant processing worker
-* Unique user ID system (no email collisions)
-* Leaderboard ranking (computed dynamically)
-* Batch export with consent-based separation
+This repository is a sanitized version of a real-world event deployment. All branding assets and sensitive data have been removed.
 
 ---
 
-## Architecture Overview
+## Overview
+
+The system is designed for event or kiosk environments where users submit a photo and receive personalized media generated using AI.
+
+Outputs include:
+
+* Stylized portrait (hero image)
+* Trading card image
+* Generated video
+* Unique download link
+
+---
+
+## Architecture
 
 ```
-User Input (Frontend / Kiosk)
-        ↓
+User Submission
+      ↓
 Firestore (players collection)
-        ↓
+      ↓
 Listener (firestore_listener.py)
-        ↓
-Hero Generation (hero_ai.py)
-        ↓
-Video Generation (video_ai.py)
-        ↓
-Video Overlay (video_overlay.py)
-        ↓
-Firebase Storage (storage_client.py)
-        ↓
-Email Delivery (email_client.py)
-        ↓
-Download Link (/download/<uniqueId>)
+      ↓
+hero_ai.py        → Image generation
+video_ai.py       → Video generation
+video_overlay.py  → Video branding
+      ↓
+storage_client.py → Upload to Firebase Storage
+      ↓
+email_client.py   → Send email with download link
 ```
 
 ---
@@ -46,35 +43,72 @@ Download Link (/download/<uniqueId>)
 
 ```
 .
-├── hero_ai.py
-├── video_ai.py
-├── video_overlay.py
-├── firestore_listener.py
-├── firestore_client.py
-├── storage_client.py
-├── email_client.py
-├── player_pipeline.py
-├── export_players.py
-├── config.py
-└── firebase-key.json   # not committed
+├── hero_ai.py              # AI image generation (portrait, face fix, card)
+├── video_ai.py            # AI video generation (FAL models)
+├── video_overlay.py       # Video overlay / branding system
+├── firestore_listener.py  # Core processing worker
+├── firestore_client.py    # Firestore helpers
+├── storage_client.py      # Firebase Storage integration
+├── email_client.py        # Email sending logic
+├── player_pipeline.py     # Pipeline orchestration
+├── export_players.py      # Post-event batch export
+├── config.py              # Configuration
 ```
 
 ---
 
-## Setup Instructions
+## Pipeline Flow
 
-### 1. Clone the repository
+Each user creates a document in Firestore containing:
 
-```bash
-git clone https://github.com/your-repo/ai-hockey-pipeline.git
-cd ai-hockey-pipeline
+* `uniqueId`
+* `firstName`, `lastName`, `email`
+* `Power`, `Speed`, `TotalScore`
+* `consent`
+
+Processing stages:
+
+1. **Hero generation** (`hero_ai.py`)
+2. **Face enhancement**
+3. **Card generation**
+4. **Video generation** (`video_ai.py`)
+5. **Overlay application** (`video_overlay.py`)
+6. **Upload to storage** (`storage_client.py`)
+7. **Email delivery** (`email_client.py`)
+
+---
+
+## AI Integration
+
+The system is modular and supports different providers.
+
+* Image generation:
+
+  * Initially implemented with Gemini
+  * Designed to support FAL-based models (e.g. Nano Banana Pro)
+
+* Video generation:
+
+  * FAL models (WAN / Nano Banana Flash)
+
+AI logic is isolated, allowing model replacement without affecting the pipeline.
+
+---
+
+## Setup
+
+### 1. Clone repository
+
+```
+git clone https://github.com/Guntera-ui/AI-Image-Hockey.git
+cd AI-Image-Hockey
 ```
 
 ---
 
-### 2. Create a virtual environment
+### 2. Create virtual environment
 
-```bash
+```
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -83,19 +117,33 @@ source venv/bin/activate
 
 ### 3. Install dependencies
 
-```bash
+Create `requirements.txt`:
+
+```
+firebase-admin
+google-cloud-firestore
+google-cloud-storage
+requests
+python-dotenv
+pillow
+fal-client
+```
+
+Then install:
+
+```
 pip install -r requirements.txt
 ```
 
 ---
 
-### 4. Configure environment variables
+### 4. Environment configuration
 
-Create a `.env` file:
+Create `.env`:
 
 ```
 SERVICE_ACCOUNT_PATH=firebase-key.json
-FIREBASE_STORAGE_BUCKET=your-bucket-name
+FIREBASE_STORAGE_BUCKET=your-bucket
 
 FAL_KEY=your_fal_api_key
 FAL_VIDEO_MODEL_ID=fal-ai/wan-2.5-preview/image-to-video
@@ -104,150 +152,107 @@ EMAIL_SMTP_HOST=smtp.sendgrid.net
 EMAIL_SMTP_PORT=587
 EMAIL_USERNAME=apikey
 EMAIL_PASSWORD=your_sendgrid_api_key
-EMAIL_FROM=no-reply@yourdomain.com
+EMAIL_FROM=no-reply@example.com
 ```
 
 ---
 
-### 5. Add Firebase credentials
+### 5. Firebase credentials
 
-Place your Firebase service account file in the root directory:
+Place your service account file:
 
 ```
 firebase-key.json
 ```
 
-Do not commit this file to version control.
+Do not commit this file.
 
 ---
 
 ## Running the System
 
-Start the pipeline worker:
+Start the processing worker:
 
-```bash
+```
 python firestore_listener.py
 ```
 
-The system will listen for new player documents in Firestore and process them through all pipeline stages automatically.
+The worker listens for new documents and processes them automatically.
 
 ---
 
-## Pipeline Description
+## Batch Export
 
-Each player document contains:
+After processing is complete:
 
-* uniqueId
-* firstName, lastName, email
-* Power, Speed, TotalScore
-* consent
-* generated media URLs
-
-Processing stages:
-
-1. Hero image generation
-2. Face enhancement
-3. Card generation
-4. Video generation
-5. Overlay branding
-6. Upload to Firebase Storage
-7. Email delivery
-
----
-
-## AI Models
-
-Image generation:
-
-* Gemini (initial implementation)
-* Nano Banana Pro via FAL (recommended)
-
-Video generation:
-
-* WAN / Nano Banana Flash via FAL
-
----
-
-## Email System
-
-The system uses SendGrid SMTP to send:
-
-* Branded HTML email
-* Download link based on uniqueId
-
----
-
-## Batch Export (Post-Event)
-
-Run:
-
-```bash
+```
 python export_players.py
 ```
 
-Output structure:
+### Output structure
 
 ```
 export/
 ├── consented/
 │   └── Player Name/
-│       ├── Player Name.txt
+│       ├── data.txt
 │       ├── Player_Name_Hockey_Card.png
 │       └── Player_Name_Hockey_Video.mp4
 └── not_consented/
 ```
 
-The text file includes:
+### Data included
 
-* Name
-* Email
-* Gender
-* Leaderboard placement
+* Name, email, gender
+* Leaderboard placement (computed)
 * All Power values
 * All Speed values
 * Total score
-* Download link
+* Download link (`/download/<uniqueId>`)
 
 ---
 
-## Leaderboard
+## Visual Asset Customization
 
-Leaderboard placement is not stored in Firestore. It is computed during export by sorting players based on TotalScore in descending order.
+This repository does not include original branding assets.
+
+To reproduce full visuals, you should provide your own:
+
+* Video overlay frames (`video_overlay.py`)
+* Logos
+* Email images
+* Card templates
+
+The system is designed to work with any branding by replacing these assets.
 
 ---
 
 ## Error Handling
 
-* Defensive checks for AI responses
-* Per-player isolation in processing
-* Retry-safe export pipeline
-* Pagination to avoid Firestore stream timeouts
+* AI response validation prevents crashes
+* Per-user failure isolation
+* Firestore pagination avoids stream timeouts
+* Export continues even if individual users fail
 
 ---
 
 ## Security
 
-* Do not commit API keys or Firebase credentials
-* Store secrets in `.env`
-* Rotate credentials if exposed
+* No credentials included
+* Use `.env` for secrets
+* Do not commit service account files
+* Do not expose real user data
 
 ---
 
-## Development Notes
+## Notes
 
-* Test with a small dataset first
-* Verify outputs (images, videos, emails)
-* Check rendering on Gmail and iOS Mail
-* Monitor logs during execution
-
----
-
-## License
-
-MIT License
+* This project is based on a real deployment
+* Branding and sensitive data have been removed
+* Intended for educational and portfolio use
 
 ---
 
 ## Status
 
-Production-ready and event-tested.
+Production-tested system adapted for demonstration purposes.
